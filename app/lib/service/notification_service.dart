@@ -1,7 +1,15 @@
+
+// import 'package:flutter/material.dart';
 // import 'package:firebase_core/firebase_core.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:flutter/material.dart';
+
+// /// Background message handler
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   debugPrint(
+//       'Handling a background message: ${message.messageId}, title: ${message.notification?.title}');
+// }
 
 // class NotificationService {
 //   // Singleton pattern
@@ -17,7 +25,7 @@
 //     // Initialize Firebase if not already
 //     await Firebase.initializeApp();
 
-//     // Request permission
+//     // Request notification permission (iOS & Android 13+)
 //     await _requestPermission();
 
 //     // Initialize local notifications
@@ -31,14 +39,10 @@
 
 //     // Optional: handle when user taps notification
 //     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
-//   }
 
-//   /// Background message handler
-//   static Future<void> _firebaseMessagingBackgroundHandler(
-//       RemoteMessage message) async {
-//     await Firebase.initializeApp();
-//     debugPrint(
-//         'Handling a background message: ${message.messageId}, title: ${message.notification?.title}');
+//     // Print FCM device token
+//     String? token = await FirebaseMessaging.instance.getToken();
+//     debugPrint('FCM Device Token: $token');
 //   }
 
 //   /// Request notification permission (iOS & Android 13+)
@@ -91,32 +95,158 @@
 //     }
 //   }
 
-//   /// Handle when user taps a notification
+//   /// Handle notification tap
 //   void _onMessageOpenedApp(RemoteMessage message) {
 //     debugPrint('Notification clicked: ${message.notification?.title}');
-//     // You can navigate to a screen here, e.g.,
+//     // Optional: Navigate to a screen
 //     // Navigator.of(context).push(MaterialPageRoute(builder: (_) => TaskScreen()));
 //   }
 
-//   /// Get device token (for testing push notifications)
+//   /// Get device token for testing
+//   Future<String?> getDeviceToken() async {
+//     return await FirebaseMessaging.instance.getToken();
+//   }
+// }
+
+
+
+// //2 versiom 
+// import 'package:flutter/material.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import '../main.dart';
+// import '../screens/landing_page.dart';
+
+// /// Background message handler
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   debugPrint(
+//       'Handling a background message: ${message.messageId}, title: ${message.notification?.title}');
+// }
+
+// class NotificationService {
+//   // Singleton
+//   static final NotificationService _instance = NotificationService._internal();
+//   factory NotificationService() => _instance;
+//   NotificationService._internal();
+
+//   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//       FlutterLocalNotificationsPlugin();
+
+//   /// Initialize Firebase Messaging & Local Notifications
+//   Future<void> init() async {
+//     await Firebase.initializeApp();
+
+//     // Request permission (iOS + Android 13+)
+//     await _requestPermission();
+
+//     // Initialize local notifications
+//     await _initLocalNotifications();
+
+//     // Foreground messages
+//     FirebaseMessaging.onMessage.listen(_onMessageHandler);
+
+//     // Background messages
+//     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+//     // Notification tap
+//     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
+
+//     // Print FCM token
+//     String? token = await FirebaseMessaging.instance.getToken();
+//     debugPrint('FCM Device Token: $token');
+//   }
+
+//   /// Request notification permission
+//   Future<void> _requestPermission() async {
+//     NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
+//       alert: true,
+//       badge: true,
+//       sound: true,
+//     );
+//     debugPrint('User granted permission: ${settings.authorizationStatus}');
+//   }
+
+//   /// Initialize Flutter Local Notifications
+//   Future<void> _initLocalNotifications() async {
+//     const AndroidInitializationSettings androidSettings =
+//         AndroidInitializationSettings('@mipmap/ic_notification'); // Your icon
+//     const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings();
+
+//     const InitializationSettings initSettings = InitializationSettings(
+//       android: androidSettings,
+//       iOS: iOSSettings,
+//     );
+
+//     await flutterLocalNotificationsPlugin.initialize(initSettings);
+//   }
+
+//   /// Handle foreground messages
+//   void _onMessageHandler(RemoteMessage message) {
+//     RemoteNotification? notification = message.notification;
+//     AndroidNotification? android = message.notification?.android;
+
+//     if (notification != null && android != null) {
+//       // 1️⃣ Show local notification
+//       flutterLocalNotificationsPlugin.show(
+//         notification.hashCode,
+//         notification.title,
+//         notification.body,
+//         NotificationDetails(
+//           android: AndroidNotificationDetails(
+//             'todo_channel',
+//             'ToDo Notifications',
+//             channelDescription: 'Channel for ToDo app notifications',
+//             importance: Importance.max,
+//             priority: Priority.high,
+//             icon: '@mipmap/ic_notification', // make sure this exists
+//           ),
+//           iOS: const DarwinNotificationDetails(),
+//         ),
+//       );
+
+//       // 2️⃣ Show in-app Snackbar
+//       final context = MyApp.navigatorKey.currentContext;
+//       if (context != null) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text(notification.body ?? ''),
+//             duration: const Duration(seconds: 3),
+//           ),
+//         );
+//       }
+//     }
+//   }
+
+//   /// Handle notification tap
+//   void _onMessageOpenedApp(RemoteMessage message) {
+//     debugPrint('Notification clicked: ${message.notification?.title}');
+//     MyApp.navigatorKey.currentState?.push(
+//       MaterialPageRoute(builder: (_) => const LandingPage()),
+//     );
+//   }
+
+//   /// Get device token for testing
 //   Future<String?> getDeviceToken() async {
 //     return await FirebaseMessaging.instance.getToken();
 //   }
 // }
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../main.dart';
+import '../screens/landing_page.dart';
 
 /// Background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  // Don't initialize Firebase here if already initialized in main.dart
   debugPrint(
       'Handling a background message: ${message.messageId}, title: ${message.notification?.title}');
 }
 
 class NotificationService {
-  // Singleton pattern
+  // Singleton
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
@@ -124,35 +254,31 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  /// Initialize Firebase Messaging & Local Notifications
+  /// Initialize notifications
   Future<void> init() async {
-    // Initialize Firebase if not already
-    await Firebase.initializeApp();
-
-    // Request notification permission (iOS & Android 13+)
+    // 1️⃣ Request notification permissions (iOS + Android 13+)
     await _requestPermission();
 
-    // Initialize local notifications
+    // 2️⃣ Initialize local notifications
     await _initLocalNotifications();
 
-    // Handle background messages
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    // Handle foreground messages
+    // 3️⃣ Foreground messages
     FirebaseMessaging.onMessage.listen(_onMessageHandler);
 
-    // Optional: handle when user taps notification
+    // 4️⃣ Background messages
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // 5️⃣ Notification taps
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
-    // Print FCM device token
+    // 6️⃣ Print FCM token (for testing)
     String? token = await FirebaseMessaging.instance.getToken();
     debugPrint('FCM Device Token: $token');
   }
 
-  /// Request notification permission (iOS & Android 13+)
+  /// Request notification permissions
   Future<void> _requestPermission() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    NotificationSettings settings = await messaging.requestPermission(
+    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -160,10 +286,10 @@ class NotificationService {
     debugPrint('User granted permission: ${settings.authorizationStatus}');
   }
 
-  /// Initialize Flutter Local Notifications
+  /// Initialize local notifications
   Future<void> _initLocalNotifications() async {
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_notification'); // ✅ Your icon
     const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings();
 
     const InitializationSettings initSettings = InitializationSettings(
@@ -180,33 +306,46 @@ class NotificationService {
     AndroidNotification? android = message.notification?.android;
 
     if (notification != null && android != null) {
+      // 1️⃣ Show local notification
       flutterLocalNotificationsPlugin.show(
         notification.hashCode,
         notification.title,
         notification.body,
         NotificationDetails(
           android: AndroidNotificationDetails(
-            'todo_channel', // channel id
-            'ToDo Notifications', // channel name
+            'todo_channel',
+            'ToDo Notifications',
             channelDescription: 'Channel for ToDo app notifications',
             importance: Importance.max,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@mipmap/ic_notification',
           ),
           iOS: const DarwinNotificationDetails(),
         ),
       );
+
+      // 2️⃣ Show in-app Snackbar
+      final context = MyApp.navigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(notification.body ?? ''),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
   /// Handle notification tap
   void _onMessageOpenedApp(RemoteMessage message) {
     debugPrint('Notification clicked: ${message.notification?.title}');
-    // Optional: Navigate to a screen
-    // Navigator.of(context).push(MaterialPageRoute(builder: (_) => TaskScreen()));
+    MyApp.navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => const LandingPage()),
+    );
   }
 
-  /// Get device token for testing
+  /// Get device token (for testing)
   Future<String?> getDeviceToken() async {
     return await FirebaseMessaging.instance.getToken();
   }
